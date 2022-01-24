@@ -1,13 +1,9 @@
-import sqlite3
 from flask_restful import Resource, reqparse
-from flask import jsonify
 from flask_jwt import jwt_required
 import psycopg2
 import geocoder
 from geopy.geocoders import Nominatim
-from datetime import datetime, time
-from datetime import date
-from json import dumps
+from datetime import datetime
 from restaurant import restaurantModel
 from restaurant import restaurantModel
 
@@ -30,7 +26,7 @@ class createrestaurant(Resource):
     def post(self):
         data = createrestaurant.parser.parse_args()
 
-        if restaurantModel.find_by_name(data['name']):
+        if restaurantModel.find_by_name(data['name'].lower()):
             return{"message": "restaurant with that name already exists."}, 400
 
         connection = psycopg2.connect(user="postgres",
@@ -45,7 +41,7 @@ class createrestaurant(Resource):
         open=data['openingtime']
         close=data['closingtime']
         query="INSERT INTO restaurants(id,name,location,openingtime,closingtime) VALUES (%s,%s,%s,%s,%s)"
-        cursor.execute(query, (id1,name,location,open,close))
+        cursor.execute(query, (id1,name.lower(),location,open,close))
         connection.commit()
         connection.close()
 
@@ -68,7 +64,7 @@ class restaurantsList(Resource):
 
 class getrestaurant(Resource):
     def get(self, name):
-        restaurant = restaurantModel.find_by_name(name)
+        restaurant = restaurantModel.find_by_name(name.lower())
         if restaurant:
             return restaurant.json()
         return{'message': 'restaurant not found'}, 404
@@ -85,7 +81,7 @@ class delrestaurant(Resource):
         cursor = connection.cursor()
         query = "DELETE FROM restaurants WHERE name=%s"
         cursor.execute(query, [name])
-        restaurant = restaurantModel.find_by_name(name)
+        restaurant = restaurantModel.find_by_name(name.lower())
         if restaurant:
             connection.commit()
             connection.close()
@@ -108,9 +104,9 @@ class putrestaurant(Resource):
     def put(self, name):
         data = putrestaurant.parser.parse_args()
         # Once again, print something not in the args to verify everything works
-        item = restaurantModel.find_by_name(name)
+        item = restaurantModel.find_by_name(name.lower())
         updated_item = restaurantModel(
-            data['id'], name, data['location'], data['openingtime'], data['closingtime'])
+            data['id'], name.lower(), data['location'], data['openingtime'], data['closingtime'])
 
         if item is None:
             try:
@@ -184,7 +180,7 @@ class closerestaurants(Resource):
         longitude=g.geojson['features'][0]['properties']['lng']
         geolocator = Nominatim(user_agent="getlocation")
         location = geolocator.reverse(f"{latitude}, {longitude}")
-        return {'items':str(location) }
+        return {'Location':str(location) }
 
 
 '''

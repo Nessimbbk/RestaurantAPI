@@ -1,7 +1,7 @@
+from datetime import timedelta
 from flask import Flask, app
 from flask_restful import Api
 from flask_jwt import JWT
-import psycopg2
 from auth import authenticate, identity
 from restaurantressource import createrestaurant
 from restaurantressource import restaurantsList
@@ -21,6 +21,7 @@ api = Api(app)
 
 jwt = JWT(app, authenticate, identity)
 
+app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=1800)
 
 api.add_resource(createrestaurant, '/createrestaurant')
 api.add_resource(restaurantsList, '/restaurants')
